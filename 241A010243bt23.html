@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bài tập 23 - Game kiểm tra tốc độ</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      body {
+        background-color: #121212;
+        color: #f1f1f1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      h1 {
+        color: #00d8ff;
+        margin-bottom: 8px;
+        font-size: 26px;
+        text-transform: uppercase;
+      }
+
+      .student-info {
+        color: #aaa;
+        margin-bottom: 20px;
+        font-size: 15px;
+      }
+
+      .dashboard {
+        width: 600px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background-color: #1e1e1e;
+        padding: 15px 25px;
+        border-radius: 10px;
+        border: 1px solid #333;
+        margin-bottom: 15px;
+      }
+
+      .stat-box {
+        font-size: 18px;
+        font-weight: 600;
+      }
+
+      .stat-box span {
+        color: #00d8ff;
+        font-size: 22px;
+        margin-left: 5px;
+      }
+
+      #startBtn {
+        background-color: #00d8ff;
+        color: #121212;
+        border: none;
+        padding: 10px 20px;
+        font-size: 16px;
+        font-weight: bold;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: 0.2s;
+      }
+
+      #startBtn:hover:not(:disabled) {
+        background-color: #00b4d8;
+        transform: scale(1.03);
+      }
+
+      #startBtn:disabled {
+        background-color: #444;
+        color: #888;
+        cursor: not-allowed;
+      }
+      #arena {
+        width: 600px;
+        height: 400px;
+        background: radial-gradient(circle at center, #252a34 0%, #16181d 100%);
+        border: 2px solid #00d8ff;
+        border-radius: 12px;
+        position: relative; /* Làm mốc tọa độ cho #target định vị tuyệt đối */
+        overflow: hidden;
+        box-shadow: 0 0 20px rgba(0, 216, 255, 0.15);
+        user-select: none;
+      }
+      #target {
+        width: 40px;
+        height: 40px;
+        background-color: #ff4757;
+        border: 3px solid #ffffff;
+        border-radius: 50%;
+        position: absolute;
+        cursor: crosshair;
+        display: none; /* Ẩn khi chưa bắt đầu */
+        box-shadow: 0 0 12px rgba(255, 71, 87, 0.8);
+        transition: transform 0.08s;
+      }
+
+      #target:active {
+        transform: scale(0.9);
+      }
+
+      #resultOverlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(18, 18, 18, 0.9);
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+      }
+
+      #resultOverlay h2 {
+        color: #ff4757;
+        font-size: 32px;
+        margin-bottom: 10px;
+      }
+
+      #resultOverlay p {
+        font-size: 20px;
+        color: #fff;
+      }
+
+      #resultOverlay span {
+        color: #00d8ff;
+        font-weight: bold;
+        font-size: 26px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Game Kiểm Tra Tốc Độ Phản Xạ</h1>
+    <div class="student-info">SV: Trần Tuấn Kiệt | MSSV: 241A010243</div>
+
+    <div class="dashboard">
+      <div class="stat-box">Điểm số: <span id="score">0</span></div>
+      <div class="stat-box">Thời gian: <span id="time">30</span>s</div>
+      <button id="startBtn">Bắt đầu trò chơi</button>
+    </div>
+
+    <div id="arena">
+      <div id="target"></div>
+      <div id="resultOverlay">
+        <h2>HẾT GIỜ!</h2>
+        <p>Tổng số điểm đạt được: <span id="finalScore">0</span></p>
+      </div>
+    </div>
+
+    <script>
+      const arena = document.getElementById("arena");
+      const target = document.getElementById("target");
+      const scoreDisplay = document.getElementById("score");
+      const timeDisplay = document.getElementById("time");
+      const startBtn = document.getElementById("startBtn");
+      const resultOverlay = document.getElementById("resultOverlay");
+      const finalScoreDisplay = document.getElementById("finalScore");
+
+      let score = 0;
+      let timeLeft = 30;
+      let isPlaying = false;
+      let countdownTimer = null;
+      let moveTimer = null;
+      function moveTargetRandomly() {
+        if (!isPlaying) return;
+
+        const maxLeft = arena.clientWidth - target.offsetWidth;
+        const maxTop = arena.clientHeight - target.offsetHeight;
+
+        const randomLeft = Math.floor(Math.random() * maxLeft);
+        const randomTop = Math.floor(Math.random() * maxTop);
+
+        target.style.left = randomLeft + "px";
+        target.style.top = randomTop + "px";
+      }
+      function resetAutoMoveInterval() {
+        clearInterval(moveTimer);
+        moveTimer = setInterval(moveTargetRandomly, 1000);
+      }
+      function startGame() {
+        score = 0;
+        timeLeft = 30;
+        isPlaying = true;
+
+        scoreDisplay.textContent = score;
+        timeDisplay.textContent = timeLeft;
+        startBtn.disabled = true;
+        startBtn.textContent = "Đang chơi...";
+        resultOverlay.style.display = "none";
+        target.style.display = "block";
+
+        moveTargetRandomly();
+        resetAutoMoveInterval();
+        countdownTimer = setInterval(() => {
+          timeLeft--;
+          timeDisplay.textContent = timeLeft;
+
+          if (timeLeft <= 0) {
+            endGame();
+          }
+        }, 1000);
+      }
+      function endGame() {
+        isPlaying = false;
+        clearInterval(countdownTimer);
+        clearInterval(moveTimer);
+
+        target.style.display = "none";
+        finalScoreDisplay.textContent = score;
+        resultOverlay.style.display = "flex";
+
+        startBtn.disabled = false;
+        startBtn.textContent = "Chơi lại";
+      }
+      target.addEventListener("click", () => {
+        if (!isPlaying) return;
+
+        score++;
+        scoreDisplay.textContent = score;
+        moveTargetRandomly();
+        resetAutoMoveInterval();
+      });
+      startBtn.addEventListener("click", startGame);
+    </script>
+  </body>
+</html>
